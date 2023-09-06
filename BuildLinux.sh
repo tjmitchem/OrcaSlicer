@@ -1,8 +1,12 @@
 #!/bin/bash
-set -e # exit on first error
+set -ex # exit on first error
 
 export ROOT=`pwd`
-export NCORES=`nproc --all`
+export SOCKETS=$(lscpu | grep "Socket(s):" | cut -d ":" -f2 | tr -d /\ /)
+export CPS=$(lscpu | grep "Core(s) per socket:" | cut -d ":" -f2 | tr -d /\ /)
+export TPC=$(lscpu | grep "Thread(s) per core:" | cut -d ":" -f2 | tr -d /\ /)
+export NCORES=$(( $SOCKETS * $CPS * $TPC ))
+
 export CMAKE_BUILD_PARALLEL_LEVEL=${NCORES}
 FOUND_GTK2=$(dpkg -l libgtk* | grep gtk2)
 FOUND_GTK3=$(dpkg -l libgtk* | grep gtk-3)
@@ -35,13 +39,14 @@ function usage() {
     echo "   -d: build deps (optional)"
     echo "   -s: build orca-slicer (optional)"
     echo "   -u: only update clock & dependency packets (optional and need sudo)"
-    echo "   -r: skip free ram check (low ram compiling)"
+    echo "   -r: do free ram check (low ram compiling)"
+    echo "   -p: skip cmake prep (jumps straight to 'make', where applicable)"
     echo "For a first use, you want to 'sudo ./BuildLinux.sh -u'"
-    echo "   and then './BuildLinux.sh -dsi'"
+    echo "   and then './BuildLinux.sh -dsir'"
 }
 
 unset name
-while getopts ":dsiuhgbr" opt; do
+while getopts ":uidsbgrph" opt; do
   case ${opt} in
     u )
         UPDATE_LIB="1"
@@ -62,7 +67,10 @@ while getopts ":dsiuhgbr" opt; do
         FOUND_GTK3=""
         ;;
     r )
-	SKIP_RAM_CHECK="1"
+	DO_RAM_CHECK="1"
+	;;
+    p )
+	SKIP_CMAKE_PREP="1"
 	;;
     h ) usage
         exit 0
@@ -77,7 +85,7 @@ then
 fi
 
 # Addtional Dev packages for OrcaSlicer
-export REQUIRED_DEV_PACKAGES="libmspack-dev libgstreamerd-3-dev libsecret-1-dev libwebkit2gtk-4.0-dev libosmesa6-dev libssl-dev libcurl4-openssl-dev eglexternalplatform-dev libudev-dev libdbus-1-dev extra-cmake-modules"
+export REQUIRED_DEV_PACKAGES="libmspack-dev libgstreamerd-3-dev libsecret-1-dev libwebkit2gtk-4.0-dev libosmesa6-dev libssl-dev libcurl4-openssl-dev eglexternalplatform-dev libudev-dev libdbus-1-dev extra-cmake-modules libfuse-dev"
 # libwebkit2gtk-4.1-dev ??
 export DEV_PACKAGES_COUNT=$(echo ${REQUIRED_DEV_PACKAGES} | wc -w)
 if [ $(dpkg --get-selections | grep -E "$(echo ${REQUIRED_DEV_PACKAGES} | tr ' ' '|')" | wc -l) -lt ${DEV_PACKAGES_COUNT} ]; then
@@ -147,7 +155,7 @@ then
     mkdir deps/build
 fi
 
-if ! [[ -n "$SKIP_RAM_CHECK" ]]
+if [[ -n "$DO_RAM_CHECK" ]]
 then
 check_available_memory_and_disk
 fi
@@ -165,16 +173,26 @@ then
         # have to build deps with debug & release or the cmake won't find evrything it needs
         mkdir deps/build/release
         pushd deps/build/release
-            cmake ../.. -DDESTDIR="../destdir" $BUILD_ARGS
-            make -j$NCORES
+	    if [[ -n "$SKIP_CMAKE_PREP" ]]
+	    then
+		echo "Skipping CMAKE prep"
+	    else
+		cmake ../.. -DDESTDIR="../destdir" $BUILD_ARGS
+	    fi
+	    make -j$NCORES
         popd
         BUILD_ARGS="${BUILD_ARGS} -DCMAKE_BUILD_TYPE=Debug"
     fi
     
     # cmake deps
     pushd deps/build
-        cmake .. $BUILD_ARGS
-        echo "done"
+        if [[ -n "$SKIP_CMAKE_PREP" ]]
+	then
+	    echo "Skipping CMAKE prep"
+	else
+            cmake .. $BUILD_ARGS
+            echo "done"
+	fi
         
         # make deps
         echo "[4/9] Building dependencies..."
@@ -224,8 +242,13 @@ then
     
     # cmake
     pushd build
-        cmake .. -DCMAKE_PREFIX_PATH="$PWD/../deps/build/destdir/usr/local" -DSLIC3R_STATIC=1 ${BUILD_ARGS}
-        echo "done"
+        if [[ -n "$SKIP_CMAKE_PREP" ]]
+	then
+	    echo "Skipping CMAKE prep"
+	else
+            cmake .. -DCMAKE_PREFIX_PATH="$PWD/../deps/build/destdir/usr/local" -DSLIC3R_STATIC=1 ${BUILD_ARGS}
+            echo "done"
+	fi
         
         # make Slic3r
         echo "[8/9] Building Slic3r..."
