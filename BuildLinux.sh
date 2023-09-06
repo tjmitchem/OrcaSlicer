@@ -36,7 +36,7 @@ function usage() {
     echo "   -s: build orca-slicer (optional)"
     echo "   -u: update and build dependencies (optional and need sudo)"
     echo "For a first use, you want to 'sudo ./BuildLinux.sh -u'"
-    echo "   and then './BuildLinux.sh -dsi'"
+    echo "   and then './BuildLinux.sh -dsir'"
 }
 
 unset name
