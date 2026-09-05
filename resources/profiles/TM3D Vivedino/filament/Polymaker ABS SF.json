@@ -1,6 +1,6 @@
 {
     "type": "filament",
-    "setting_id": "GFSA04",
+    "setting_id": "2zgO6bgUdBxCOb0U",
     "from": "system",
     "instantiation": "true",
     "default_filament_colour": [
@@ -27,7 +27,6 @@
     "filament_type": [
         "ABS"
     ],
-    "from": "User",
     "hot_plate_temp": [
         "110"
     ],

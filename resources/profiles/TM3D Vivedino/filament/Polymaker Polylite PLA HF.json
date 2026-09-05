@@ -1,6 +1,6 @@
 {
     "type": "filament",
-    "setting_id": "GFSA04",
+    "setting_id": "p2yuPrXWPgU53AHP",
     "from": "system",
     "instantiation": "true",
     "filament_max_volumetric_speed": [
@@ -9,7 +9,6 @@
     "filament_settings_id": [
         "Polymaker Polylite PLA HF"
     ],
-    "from": "User",
     "hot_plate_temp": [
         "70"
     ],

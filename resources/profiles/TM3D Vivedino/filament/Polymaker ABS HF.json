@@ -1,6 +1,6 @@
 {
     "type": "filament",
-    "setting_id": "GFSA04",
+    "setting_id": "WpXm0zhvCPgmocUf",
     "from": "system",
     "instantiation": "true",
     "chamber_temperature": "55",
@@ -28,7 +28,6 @@
     "filament_type": [
         "ABS"
     ],
-    "from": "User",
     "hot_plate_temp": [
         "110"
     ],

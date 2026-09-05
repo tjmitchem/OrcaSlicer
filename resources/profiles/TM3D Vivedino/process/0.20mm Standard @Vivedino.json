@@ -1,6 +1,6 @@
 {
     "type": "process",
-    "setting_id": "GP004",
+    "setting_id": "co0Jb6x6zZH97oLS",
     "name": "0.20mm Standard @Vivedino",
     "from": "system",
     "inherits": "fdm_process_vivedino_common",
